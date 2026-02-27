@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "name": "XO Online",
+    "slug": "xo-online-firebase",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "android": {
+      "package": "com.example.xoonline",
+      "versionCode": 1
+    },
+    "plugins": [],
+    "extra": {}
+  }
+}

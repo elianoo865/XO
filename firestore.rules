@@ -1,0 +1,41 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function uid() { return request.auth.uid; }
+
+    // Users can read/write their own profile (limited fields).
+    match /users/{userId} {
+      allow read: if signedIn() && userId == uid();
+      allow create: if signedIn() && userId == uid();
+      allow update: if signedIn() && userId == uid()
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          "name", "lastSeenAt", "activeRoomId"
+        ]);
+      allow delete: if false;
+    }
+
+    // Matchmaking queue: users can manage only their own queue doc.
+    match /queue/{userId} {
+      allow read: if signedIn() && userId == uid();
+      allow create, update, delete: if signedIn() && userId == uid();
+    }
+
+    // Rooms: participants can read. Client writes are blocked (only Admin SDK via Functions writes).
+    match /rooms/{roomId} {
+      allow read: if signedIn() && (
+        resource.data.players.X.uid == uid() || resource.data.players.O.uid == uid()
+      );
+      allow write: if false;
+
+      match /events/{eventId} {
+        allow read: if signedIn() && (
+          get(/databases/$(database)/documents/rooms/$(roomId)).data.players.X.uid == uid() ||
+          get(/databases/$(database)/documents/rooms/$(roomId)).data.players.O.uid == uid()
+        );
+        allow write: if false;
+      }
+    }
+  }
+}
